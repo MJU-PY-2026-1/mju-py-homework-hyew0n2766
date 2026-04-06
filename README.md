@@ -59,7 +59,7 @@
       력 시나리오를 구상하였다. 이를 바탕으로 1차에서는 단순 입출력 중심으로 구현하였다.
     
 ### **📁 증빙 자료:**
-  * [1차_AI협업캡처.pdf 첨부 완료] (첨부 후 링크)
+  * [1차_AI협업캡처.pdf 첨부 완료] ([첨부 후 링크](https://github.com/MJU-PY-2026-1/mju-py-homework-hyew0n2766/blob/main/1%EC%B0%A8_AI%ED%98%91%EC%97%85%EC%BA%A1%EC%B2%98.pdf))
 
 <br>
 
