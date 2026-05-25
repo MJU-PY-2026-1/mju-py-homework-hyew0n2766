@@ -22,6 +22,7 @@ focus = 60.0
 stress = 20.0
 exp = 0
 gold = 0
+level = 1
 
 # 오늘의 공부 기록 변수
 
@@ -44,10 +45,36 @@ bonus_message = ''
 items = []
 is_calculated = False
 
+survival_records = []
+record_headers = ['이름', '전공', '레벨', '총공부시간', '공부과목수', '완료과목수',
+                  '집중공부과목수', '영단어수', '영타점수', '체력', '집중력',
+                  '스트레스', '경험치', '골드', '보유보상']
 
 # ===========================================
-# 3차 메뉴 출력 함수
+# 4차 추가 try-except 1: 정수 입력 예외 처리
 # ===========================================
+
+def get_int(prompt):
+    while True:
+        try:
+            value = int(input(prompt))
+            return value
+        except ValueError:
+            print('숫자(정수)로 입력해야 합니다. 다시 입력해주세요.')
+            
+# ===========================================
+# 4차 추가 try-except 2: 실수 입력 예외 처리
+# ===========================================
+def get_float(prompt):
+    while True:
+        try:
+            value = float(input(prompt))
+            return value
+        except ValueError:
+            print('숫자(실수)로 입력해야 합니다. 다시 입력해주세요.')
+
+
+# 3차 메뉴 출력 함수
 
 def show_menu():
     print('\n==== 메인메뉴 ====')
@@ -58,6 +85,10 @@ def show_menu():
     print('5. 오늘의 생존 결과 조회')
     print('6. 현실 보상 상점 이용')
     print('7. 보상 사용하기')
+    print('8. 일일미션')
+    print('9. 누적 생존 기록 조회')
+    print('10. 생존 기록 파일 저장')
+    print('11. 저장 파일 확인')
     print('0. 종료')
 
 # ===========================================
@@ -67,16 +98,44 @@ def show_menu():
 
 def input_personal_info():
     global character_name, major, word_count, typing_score, sleep_hours, is_calculated
+    global hp, focus, stress, exp, gold, level
+    global study_hours, total_completed, focus_Record
+    global condition, message, warning, bonus_message
+    global study_subjects,study_times,completed_subjects,items
 
     character_name = input('성함을 입력하세요: ')
     major = input('당신의 전공을 입력하세요: ')
 
-    # 영어 관련 입력 - 단순 구현
-    word_count = int(input('오늘 외운 영어 단어 수를 입력하세요: '))
-    typing_score = int(input('영어 타자 점수를 입력하세요: '))
+    # 영어 단어 미니게임 변수
+    word_count = 0
+    typing_score = 0
+    print('\n영단어 타자 미니게임을 통해 경험치를 획득하고 영어 실력을 성장시켜보세요!')
 
     # 수면 시간 입력
     sleep_hours = float(input('오늘의 수면 시간을 입력하세요: '))
+
+    # 캐릭터 별 초기값
+    hp = 60.0
+    focus = 60.0
+    stress = 20.0
+    exp = 0
+    gold = 0
+    level = 1
+
+    study_hours = 0
+    total_completed = 0
+    focus_Record = 0
+
+    condition = ''
+    message = ''
+    warning = ''
+    bonus_message = ''
+
+    study_subjects = []
+    study_times = []
+    completed_subjects = []
+    items = []
+
 
     is_calculated = False
     print('\n 인적 사항 등록을 성공하였습니다!')
@@ -224,6 +283,77 @@ def count_focus_record(times):
     
     return count
 
+def do_mission():
+    global hp, stress, exp, gold, word_count, typing_score, is_calculated
+    
+    if character_name == '':
+        print('\n1번 메뉴에서 인적 사항을 모두 입력한 후 다시 실행해주세요!')
+        return
+    
+    print('\n==== 일일 미션 🎮 ====')
+    print('1. 1시간 휴식')
+    print('2. 식사')
+    print('3. 카페')
+    print('4. 영단어 타자 미니게임')
+    print('0. 미션 나가기')
+
+    mission_choice = input('수행할 미션 번호를 입력하세요: ')
+
+    if mission_choice == '1':
+        hp += 5
+        stress -= 10
+        exp -= 3
+        print('1시간 휴식을 통해 체력을 회복하고 스트레스를 완화시키세요.')
+        
+    elif mission_choice == '2':
+        hp += 10
+        print('식사를 통해 체력을 회복하세요!')
+
+    elif mission_choice == '3':
+        cafe_ticket = ''
+       
+        for item in items:
+            if '카페' in item or '라떼' in item or '음료' in item or '티' in item:
+                cafe_ticket = item
+                break
+            
+        if cafe_ticket != '':
+            items.remove(cafe_ticket)
+            focus += 8
+            stress -= 8
+            
+            update_latest_record()
+
+            print(f'{cafe_ticket}을(를) 사용했습니다!')
+            print('음료 섭취를 통해 집중력을 증가시키고 스트레스를 감소시키세요!')
+            
+        else:
+            print('사용 가능한 카페 이용권이 존재하지 않습니다...')
+            print('상점을 방문해 카페 관련 보상을 구매해주세요!')    
+
+    elif mission_choice == '4':
+        hp += 10
+        words = ['while', 'for', 'range', 'start', 'stop', 'step', 'break', 'continue', 'loop',
+                 'condition', 'count', 'print', 'input', 'menu', 'total', 'filter', 'sum', 'indecing',
+                 'slicing', 'string', 'list', 'tuple', 'dictionary', 'set','index',
+                 'append', 'split', 'method', 'database', 'challenge', 'final', 'structure', 'sequence',
+                 'variable', 'integer', 'float', 'boolean', 'function', 'definition', 'call' , 'parameter',
+                 'argument', 'return', 'local', 'global', 'scope', 'keyword', 'default', 'position', 'value',
+                 'header', 'suite', 'execute', 'control', 'repeat', 'object', 'random', 'angle', 'distance', 'forward'
+                 , 'left', 'right', 'turtle', 'graphics', 'library', 'import', 'shape', 'color', 'current',
+                 'position', 'xcor', 'ycor', 'infinite', 'password', 'message', 'area', 'radius', 'calculate', 'processing',
+                 'result', 'output', 'reusable', 'modular', 'flexible', 'indentation',
+                 'syntax', 'range', 'step', 'start', 'stop', 'string', 'indexing', 'slicing',
+                 'negative', 'positive', 'sequence', 'data', 'object', 'condition', 'True', 'False', 'elif',
+                 'else', 'nested', 'challenge', 'mission', 'average', 'score', 'pass', 'fail', 'order',
+                 'payment', 'discount', 'system', 'kiosk', 'smart', 'movie', 'cafe', 'POS', 'sales',
+                 'review', 'repeat', 'iteration', 'execute', 'command', 'program', 'design', 'logic','module',
+                 'interactive', 'visual', 'graphics', 'coordinate', 'movement', 'rotation', 'generate', 'randomize', 'accumulate',
+                 'initialize', 'increment', 'decrement', 'validation', 'exception', 'process', 'operation', 'format',
+                 'formatting', 'concatenate', 'multiply', 'divide', 'compare', 'retrieve', 'access', 'update', 'variable','definition',
+                 'execution', 'declaration', 'reusable', 'maintainable']
+
+                
 # ===========================================
 # 3차 추가 및 함수화 + return 사용 함수
 # ===========================================
