@@ -112,7 +112,7 @@ def input_personal_info():
     print('\n영단어 타자 미니게임을 통해 경험치를 획득하고 영어 실력을 성장시켜보세요!')
 
     # 수면 시간 입력
-    sleep_hours = float(input('오늘의 수면 시간을 입력하세요: '))
+    sleep_hours = get_float('오늘의 수면 시간을 입력하세요: ')
 
     # 캐릭터 별 초기값
     hp = 60.0
@@ -162,7 +162,7 @@ def input_study_record():
             print('오늘의 공부 기록 입력을 종료합니다.')
             break
 
-        hours = int(input(f'{subject}을 공부한 시간을 입력하세요.')) 
+        hours = get_int(f'{subject}을 공부한 시간을 입력하세요: ')
 
         if hours <= 0:
             print('잘못된 입력입니다. 다시 입력해주세요!')
@@ -284,7 +284,7 @@ def count_focus_record(times):
     return count
 
 def do_mission():
-    global hp, stress, exp, gold, word_count, typing_score, is_calculated
+    global hp, focus, stress, exp, gold, level, word_count, typing_score, is_calculated
     
     if character_name == '':
         print('\n1번 메뉴에서 인적 사항을 모두 입력한 후 다시 실행해주세요!')
@@ -321,8 +321,8 @@ def do_mission():
             items.remove(cafe_ticket)
             focus += 8
             stress -= 8
-            
-            update_latest_record()
+
+            update_latest_record() 
 
             print(f'{cafe_ticket}을(를) 사용했습니다!')
             print('음료 섭취를 통해 집중력을 증가시키고 스트레스를 감소시키세요!')
@@ -332,9 +332,13 @@ def do_mission():
             print('상점을 방문해 카페 관련 보상을 구매해주세요!')    
 
     elif mission_choice == '4':
-        hp += 10
+        print('\n==== 영단어 타자 미니게임 ====')
+        print('총 30개의 파이썬 관련 영단어가 출제됩니다.')
+        print('제시된 단어를 최대한 정확히 입력해주세요!')
+        print('start!')
+
         words = ['while', 'for', 'range', 'start', 'stop', 'step', 'break', 'continue', 'loop',
-                 'condition', 'count', 'print', 'input', 'menu', 'total', 'filter', 'sum', 'indecing',
+                 'condition', 'count', 'print', 'input', 'menu', 'total', 'filter', 'sum', 'indexing',
                  'slicing', 'string', 'list', 'tuple', 'dictionary', 'set','index',
                  'append', 'split', 'method', 'database', 'challenge', 'final', 'structure', 'sequence',
                  'variable', 'integer', 'float', 'boolean', 'function', 'definition', 'call' , 'parameter',
@@ -351,14 +355,105 @@ def do_mission():
                  'interactive', 'visual', 'graphics', 'coordinate', 'movement', 'rotation', 'generate', 'randomize', 'accumulate',
                  'initialize', 'increment', 'decrement', 'validation', 'exception', 'process', 'operation', 'format',
                  'formatting', 'concatenate', 'multiply', 'divide', 'compare', 'retrieve', 'access', 'update', 'variable','definition',
-                 'execution', 'declaration', 'reusable', 'maintainable']
+                 'execution', 'declaration', 'reusable', 'maintainable'] 
+        
+        correct_count = 0
+        total_mistake = 0
+        total_length = 0
 
-                
+        for i in range(30):
+            quiz_word = random.choice(words)
+
+            print(f'\n{i+1}번째 단어: {quiz_word}')
+            answer = input('입력: ')
+
+            mistake = 0
+
+            if len(quiz_word) < len(answer):
+                short_length = len(quiz_word)
+            else:
+                short_length = len(answer)
+
+            for j in range(short_length):
+                if quiz_word[j] != answer[j]:
+                    mistake += 1
+
+            if len(quiz_word) > len(answer):
+                mistake += len(quiz_word) - len(answer)
+            elif len(quiz_word) < len(answer):
+                mistake += len(answer) - len(quiz_word)
+
+            total_mistake += mistake
+            total_length += len(quiz_word)
+
+            if answer == quiz_word:
+                correct_count += 1     
+            else:
+                print(f'오답! 오타 개수: {mistake}개')
+
+        if total_length > 0:
+            accuracy = (total_length - total_mistake) / total_length * 100
+        else:
+            accuracy = 0
+            print('잠이 부족하신가요? 숙면 후 타자 연습의 재진행을 권합니다.')
+
+        if accuracy < 0:
+           accuracy = 0
+
+        word_count += correct_count
+        typing_score += int(accuracy)
+
+        exp += correct_count * 20
+        gold += correct_count * 50
+        stress += total_mistake
+
+        print('\n==== 영단어 타자 미니게임 결과 ====')
+        print(f'정답 개수 : 30개 중 {correct_count}개')
+        print(f'총 오타 수 : 30 단어 작성 중 {total_mistake}개')
+        print(f'정확도 : {accuracy:.1f}%')
+        print(f'획득 영타 점수 : {int(accuracy)}점')
+        print(f'획득 경험치 : {correct_count * 20}')
+        print(f'획득 골드 : {correct_count * 50}골드')
+
+        update_latest_record() 
+
+    elif mission_choice == '0':
+        print('일일미션 수행을 종료합니다')
+
+    else:
+        print('잘못된 메뉴 선택입니다!')
+
+    level = exp // 100 + 1
+    update_latest_record()
+
+# 사용자 별 하루 생존 결과 저장 시스템
+def make_result_row():
+    if len(items) == 0:
+        item_text = '없음'
+
+    else:
+        item_text = ''
+
+        for i in range(len(items)):
+            item_text += items[i]
+
+            if i != len(items) - 1:
+                item_text += '/' 
+
+    row = [character_name, major, level, study_hours, len(study_subjects),
+           total_completed, focus_Record, word_count, typing_score, hp, focus, stress, exp, gold, item_text]       
+
+    return row
+
+def update_latest_record():
+    if len(survival_records) > 0 and is_calculated == True:
+        survival_records[-1] = make_result_row()
+
 # ===========================================
 # 3차 추가 및 함수화 + return 사용 함수
 # ===========================================
 def calculate_status():
-    global hp, focus, stress, exp, gold
+    global hp, focus, stress, exp, gold, level
     global condition, message, warning, bonus_message, focus_Record, is_calculated
 
     if character_name == '':
@@ -387,7 +482,7 @@ def calculate_status():
     gold += total_completed * 1000 
 
     if typing_score >= 100:
-        exp += 5
+        exp += 5    
 
     # 캐릭터 상태 판정
     if stress >= 85:
@@ -407,6 +502,12 @@ def calculate_status():
     else:
         message = '생존하는 그 날까지 좀 더 분발하시길 바랍니다.'
 
+    # 레벨 
+    if exp >= 100:
+        level = exp // 100 + 1
+    else:
+        level = 1   
+
     # 공부 외 영역 평가
     if sleep_hours <= 5:
         if stress > 80:
@@ -424,6 +525,8 @@ def calculate_status():
     
     is_calculated = True
 
+    survival_records.append(make_result_row())
+
     return exp, gold
 
 # ===========================================
@@ -440,6 +543,7 @@ def print_result():
     print('\n===== 🔥오늘의 생존 결과🔥 =====') 
     print(f'이름: {character_name}')
     print(f'전공: {major}')
+    print(f'레벨: Lv.{level}')
 
     print('\n~~~~~ 오늘의 공부 기록 ~~~~~')
 
@@ -608,18 +712,88 @@ def use_reward():
     reward = input('사용할 보상 이름을 입력해주세요!')
 
     if reward in items:
-        items.remove(reward)
-        print(f'{reward}을(를) 사용하셨습니다!')
-        print('즐거운 시간 되시길 바랍니다.')
+        if '티' in reward or '라떼' in reward or '스무디' in reward or '쉐이크' in reward or '음료' in reward or '카페' in reward :
+            print('카페 관련 보상은 8번 일일 미션 수행의 카페 이용에서만 사용 가능합니다!')
+            print('메인 메뉴에서 일일미션을 선택해주세요!')
+
+        else:    
+            items.remove(reward)
+            update_latest_record()
+            print(f'{reward}을(를) 사용하셨습니다!')
+            print('즐거운 시간 되시길 바랍니다.')
     else:
         print('해당 보상을 보유하고 있지 않습니다.')
         print('상점 방문을 추천드립니다.')
 
 # ===========================================
-# 3차 추가
+# 4차 추가 이중리스트 출력
+# ===========================================
+# 9. 누적 생존 기록 조회
+def print_survival_records():
+    if len(survival_records) == 0:
+        print('\n아직 누적된 생존 기록이 없습니다..!')
+        return
+    
+    print('\n==== 누적 생존 기록 ⚔️ ====')
+
+    for header in record_headers:
+        print(f'{header}', end = '\t')
+    print()
+
+    for row in survival_records:
+        for data in row:
+            print(f'{data}', end ='\t')        
+        print()
+
+# ===========================================
+# 4차 추가 파일 저장 write
+# ===========================================
+# 10. 생존 기록 파일 저장
+def save_records_to_file():
+    if len(survival_records) == 0:
+        print('\n저장할 생존 기록이 없습니다.')
+        return
+    
+    try:
+        with open('survival_records.txt', 'w', encoding = 'utf-8') as file:
+            for i in range(len(record_headers)):
+                file.write(str(record_headers[i]))
+                if i < len(record_headers) - 1:
+                    file.write(',')
+            file.write('\n')
+
+            for row in survival_records:
+                for i in range(len(row)):
+                    file.write(str(row[i]))
+                    if i < len(row) - 1:
+                        file.write(',')
+
+                file.write('\n')
+
+        print('\nsurvival_records.txt 파일 저장이 완료되었습니다!')
+
+    except OSError:
+        print('파일 저장 중 오류가 발생했습니다!') 
+
+# ===============================================
+# 4차 추가 파일 확인 및 FileNotFoundError 예외 처리
+# ===============================================
+# 11. 저장 파일 확인
+def read_saved_file():
+    try:
+        with open('survival_records.txt', 'r', encoding = 'utf-8') as file:
+            print('\n==== 저장된 파일 내용 ====')
+            lines = file.readlines()
+
+            for line in lines:
+                print(line, end = '')
+
+    except FileNotFoundError:
+        print('\n저장된 파일이 없습니다.')
+        print(' 먼저 10번 메뉴를 실행해 파일을 저장해주세요!')
+
 # main logic
 # while True + break
-# ===========================================
 
 while True:
 
@@ -646,6 +820,19 @@ while True:
 
     elif choice == '7':
         use_reward()
+
+    elif choice == '8':
+        do_mission()
+
+    elif choice == '9':
+        print_survival_records()
+
+    elif choice == '10':
+        save_records_to_file()
+
+    elif choice == '11':
+        read_saved_file()
+
 
     elif choice == '0':
         print('\n프로그램 종료!')
