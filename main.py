@@ -106,14 +106,15 @@ def input_personal_info():
     character_name = input('성함을 입력하세요: ')
     major = input('당신의 전공을 입력하세요: ')
 
-    # 영어 단어 미니게임 변수
-    word_count = 0
-    typing_score = 0
-    print('\n영단어 타자 미니게임을 통해 경험치를 획득하고 영어 실력을 성장시켜보세요!')
-
     # 수면 시간 입력
-    sleep_hours = get_float('오늘의 수면 시간을 입력하세요: ')
-
+    while True:
+        sleep_hours = get_float('오늘의 수면 시간을 입력하세요: ')
+        
+        if sleep_hours < 0 or sleep_hours > 24:
+            print('수면시간은 0~24시간 내로만 입력 가능합니다.')
+        else:
+            break
+    
     # 캐릭터 별 초기값
     hp = 60.0
     focus = 60.0
@@ -139,7 +140,10 @@ def input_personal_info():
 
     is_calculated = False
     print('\n 인적 사항 등록을 성공하였습니다!')
-
+# 영어 단어 미니게임 변수
+    word_count = 0
+    typing_score = 0
+    print('\n등록해주셔서 감사합니다, 영단어 타자 미니게임을 통해 경험치를 획득하고 영어 실력을 성장시켜보세요!')
 
 # ===========================================
 # 3차 추가 및 함수화
@@ -161,13 +165,19 @@ def input_study_record():
         if subject == '오늘치 공부 끝!':
             print('오늘의 공부 기록 입력을 종료합니다.')
             break
+        
+        while True:
+            hours = get_int(f'{subject}을 공부한 시간을 입력하세요: ')
 
-        hours = get_int(f'{subject}을 공부한 시간을 입력하세요: ')
+            if hours <= 0:
+                print('잘못된 입력입니다. 다시 입력해주세요!')
+                continue
 
-        if hours <= 0:
-            print('잘못된 입력입니다. 다시 입력해주세요!')
-            continue
-
+            elif hours > 24:
+                print('하루 공부 시간이 24시간을 초과할 수 없습니다.')
+            else:
+                break
+            
         # 중복 과목 자동 합산
         if subject in study_subjects:
             subject_index = study_subjects.index(subject)
@@ -303,10 +313,14 @@ def do_mission():
         hp += 5
         stress -= 10
         exp -= 3
+
+        level = exp // 100+1
+        update_latest_record()
         print('1시간 휴식을 통해 체력을 회복하고 스트레스를 완화시키세요.')
         
     elif mission_choice == '2':
         hp += 10
+        update_latest_record()
         print('식사를 통해 체력을 회복하세요!')
 
     elif mission_choice == '3':
@@ -423,8 +437,6 @@ def do_mission():
     else:
         print('잘못된 메뉴 선택입니다!')
 
-    level = exp // 100 + 1
-    update_latest_record()
 
 # 사용자 별 하루 생존 결과 저장 시스템
 def make_result_row():
@@ -446,8 +458,10 @@ def make_result_row():
     return row
 
 def update_latest_record():
-    if len(survival_records) > 0 and is_calculated == True:
-        survival_records[-1] = make_result_row()
+    if character_name == '':
+        return
+
+    survival_records.append(make_result_row())    
 
 # ===========================================
 # 3차 추가 및 함수화 + return 사용 함수
@@ -622,6 +636,7 @@ def use_shop():
         if gold >= 2500:
             gold -= 2500
             items.append('카페 그라지에 아이스티 구매권')
+            update_latest_record()
             print('카페 그라지에 아이스티 구매권을 획득했습니다.')
 
         else:
@@ -631,6 +646,7 @@ def use_shop():
         if gold >= 2000:
             gold -= 2000
             items.append('편의점 초콜릿 구매권')
+            update_latest_record()
             print('편의점 초콜릿 구매권을 획득했습니다.')
 
         else:
@@ -640,6 +656,7 @@ def use_shop():
         if gold >= 50000:
             gold -= 50000
             items.append('일일 자유시간권')
+            update_latest_record()
             print('일일 자유시간권을 획득했습니다.')
 
         else:
@@ -674,6 +691,7 @@ def use_shop():
             if gold >= random_price:
                 gold -= random_price
                 items.append(random_item)
+                update_latest_record()
                 print(f'{random_item} 구매권을 획득했습니다.')
             else:
                 print('골드가 부족하여 구매에 실패하였습니다! 다음 기회에..')
@@ -736,14 +754,13 @@ def print_survival_records():
     
     print('\n==== 누적 생존 기록 ⚔️ ====')
 
-    for header in record_headers:
-        print(f'{header}', end = '\t')
-    print()
+    for record_num in range(len(survival_records)):
+        print(f'\n----- {record_num + 1}번째 생존 기록 -----')
+        
+        row = survival_records[record_num]
 
-    for row in survival_records:
-        for data in row:
-            print(f'{data}', end ='\t')        
-        print()
+        for i in range(len(record_headers)):
+            print(f'{record_headers[i]} : {row[i]}')   
 
 # ===========================================
 # 4차 추가 파일 저장 write
@@ -778,15 +795,67 @@ def save_records_to_file():
 # ===============================================
 # 4차 추가 파일 확인 및 FileNotFoundError 예외 처리
 # ===============================================
+
+def display_width(text):
+    width = 0
+
+    for ch in str(text):
+        if ord(ch) > 127:
+            width += 2
+        else:
+            width += 1
+        
+    return width
+    
+def cut_text(text, width):
+        text = str(text)
+
+        while display_width(text) > width:
+            text = text[:-1]
+            
+        return text
+
+def print_cell(text, width):
+    text = cut_text(text, width)
+
+    space = width - display_width(text)
+
+    left_space = space // 2
+    right_space = space - left_space
+
+    print(' ' * left_space + text + ' ' * right_space, end = ' | ') 
+       
 # 11. 저장 파일 확인
 def read_saved_file():
     try:
         with open('survival_records.txt', 'r', encoding = 'utf-8') as file:
-            print('\n==== 저장된 파일 내용 ====')
             lines = file.readlines()
 
-            for line in lines:
-                print(line, end = '')
+            if len(lines) == 0:
+                print('\n저장된 파일 내용이 없습니다.')
+                print(' 먼저 10번 메뉴를 실행해 파일을 저장해주세요!')
+                return
+            
+            headers = lines[0].strip().split(',')
+
+            print('\n===== 저장된 파일 내용 =====')
+            
+            widths = [10,24,8,12,10,10,12,8,8,10,10,10,10,10]
+
+            for i in range(len(widths)):
+                print_cell(headers[i], widths[i])
+                
+            print(headers[14])
+
+            print('-'*160)    
+
+            for line in lines[1:]:
+                row = line.strip().split(',')
+
+                for i in range(len(widths)):
+                    print_cell(row[i], widths[i])
+                    
+                print(row[14])    
 
     except FileNotFoundError:
         print('\n저장된 파일이 없습니다.')
