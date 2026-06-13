@@ -150,6 +150,6 @@
                록 설계하였다.
      **해결:** try-except 구문으로 오류 발생 시 프로그램이 종료되지 않고 파일 미존재 안내를                 출력하도록 수정했다.
 ### **📁 증빙 자료:**
-  * [4차_AI협업캡처.pdf 첨부 완료] (첨부 후 링크)
-  * [4차과제_실행결과.jpg]
+  * [4차_AI협업캡처.pdf 첨부 완료] ([첨부 후 링크](https://github.com/MJU-PY-2026-1/mju-py-homework-hyew0n2766/blob/main/4%EC%B0%A8%20%EA%B3%BC%EC%A0%9C%20%EC%8B%A4%ED%96%89%20%EA%B2%B0%EA%B3%BC.pdf))
+  * [4차과제_실행결과.jpg]없음
 <br>
