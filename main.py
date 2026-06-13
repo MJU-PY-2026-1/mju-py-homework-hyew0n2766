@@ -1,6 +1,7 @@
-# 파일이름 : 3차 과제
+# 파일이름 : 4차 과제
 # 작 성 자 : 60221856 김혜원
 
+import time
 import random
 
 print('===== ♛ 대학생 생존 서바이벌 ♛ =====')
@@ -61,18 +62,41 @@ def get_int(prompt):
             return value
         except ValueError:
             print('숫자(정수)로 입력해야 합니다. 다시 입력해주세요.')
-            
+
 # ===========================================
-# 4차 추가 try-except 2: 실수 입력 예외 처리
+# # 4차 추가 try-except 2: 실수 입력 예외 처리
 # ===========================================
-def get_float(prompt):
+def get_time_hours(message):
     while True:
         try:
-            value = float(input(prompt))
-            return value
-        except ValueError:
-            print('숫자(실수)로 입력해야 합니다. 다시 입력해주세요.')
+            user_input = input(message)
+            user_input =user_input.replace('시간','')
+            user_input = user_input.replace('분', '')
 
+            parts = user_input.split()
+
+            if len(parts) != 2:
+                print('6시간 30분 처럼 "x시간 x분"형태로 입력해주세요')
+                continue
+
+            hour = int(parts[0])
+            minute = int(parts[1])
+
+            if hour < 0 or minute < 0 or minute >= 60:
+                print('시간 입력이 잘못되었습니다.')
+                continue
+
+            return hour + minute / 60
+        except ValueError:
+            print('6시간 30분 형식으로 다시 입력해주세요!')
+
+# ===========================================
+# # 4차 추가 시간 출력
+# ===========================================
+def format_time(hours):
+    h = int(hours)
+    m = int(round((hours - h) * 60))
+    return f'{h}시간 {m}분'
 
 # 3차 메뉴 출력 함수
 
@@ -108,7 +132,7 @@ def input_personal_info():
 
     # 수면 시간 입력
     while True:
-        sleep_hours = get_float('오늘의 수면 시간을 입력하세요: ')
+        sleep_hours = get_time_hours('오늘의 수면 시간을 입력하세요: ')
         
         if sleep_hours < 0 or sleep_hours > 24:
             print('수면시간은 0~24시간 내로만 입력 가능합니다.')
@@ -165,16 +189,18 @@ def input_study_record():
         if subject == '오늘치 공부 끝!':
             print('오늘의 공부 기록 입력을 종료합니다.')
             break
-        
+
         while True:
-            hours = get_int(f'{subject}을 공부한 시간을 입력하세요: ')
+            remaining_hours = 24 - sleep_hours - study_hours
+
+            hours = get_time_hours(f'{subject}을 공부한 시간을 입력하세요: ')
 
             if hours <= 0:
                 print('잘못된 입력입니다. 다시 입력해주세요!')
                 continue
 
-            elif hours > 24:
-                print('하루 공부 시간이 24시간을 초과할 수 없습니다.')
+            elif hours > remaining_hours:
+                print(f'입력 가능 시간을 초과하셨습니다. 이미 {format_time(24-remaining_hours)}시간을 잠과 공부에 쓰신 상태입니다.')
             else:
                 break
             
@@ -210,35 +236,40 @@ def organize_study_list():
         return
     
     # 최우선 과목 맨 앞 배치
-    priority_subject = input("\n오늘 가장 중요했던 과목을 입력하세요. 없다면 'Enter'를 누르세요.")
+    priority_subject = input("\n오늘 가장 중요했던 과목을 입력하세요. 없다면 'NO'를 입력하세요: ")
 
-    if priority_subject in study_subjects:
-        priority_index = study_subjects.index(priority_subject)
-        priority_time = study_times[priority_index]
+    if priority_subject.upper() != 'NO':
+        if priority_subject in study_subjects:
+            priority_index = study_subjects.index(priority_subject)
+            priority_time = study_times[priority_index]
 
-        study_subjects.remove(priority_subject)
-        study_times.pop(priority_index)
+            study_subjects.remove(priority_subject)
+            study_times.pop(priority_index)
 
-        study_subjects.insert(0, priority_subject)
-        study_times.insert(0, priority_time)
-        
-        print(f"'{priority_subject}'을(를) 최우선 과목으로 지정하였습니다.")
+            study_subjects.insert(0, priority_subject)
+            study_times.insert(0, priority_time)
+            
+            print(f"'{priority_subject}'을(를) 최우선 과목으로 지정하였습니다.")
 
     # 잘못 입력한 과목 삭제
-    remove_subject = input("\n잘못 입력한 과목이 있다면 입력하세요, 없다면 'Enter'를 누르세요.")
+    while True:
+        remove_subject = input("\n잘못 입력한 과목이 있다면 입력하세요, 없다면 'NO'를 입력하세요: ")
 
-    if remove_subject in study_subjects:
-        remove_index = study_subjects.index(remove_subject)
-        remove_time = study_times[remove_index]
+        if remove_subject.upper() == 'NO':
+            break
+        else:
+            if remove_subject in study_subjects:
+                remove_index = study_subjects.index(remove_subject)
+                remove_time = study_times[remove_index]
 
-        study_subjects.remove(remove_subject)
-        study_times.pop(remove_index)
-        study_hours -=remove_time
+                study_subjects.remove(remove_subject)
+                study_times.pop(remove_index)
+                study_hours -=remove_time
 
-        print(f"'{remove_subject}' 을(를) 삭제했습니다.")
+                print(f"'{remove_subject}' 을(를) 삭제했습니다.")
 
-    else:
-        print('삭제할 과목이 존재하지 않거나 입력되지 않았습니다.')
+            else:
+                print('삭제할 과목이 존재하지 않거나 입력되지 않았습니다.')
 
     is_calculated = False
 
@@ -265,18 +296,23 @@ def check_completed_subjects():
 
 
     for subject in study_subjects:
-        answer = input(f'{subject}의 하루 공부할당량을 채웠나요?')
 
-        if answer == 'stop':
-            print('완료 여부 확인을 중단합니다.')
-            break
+        while True:
+            answer = input(f'{subject}의 하루 공부할당량을 채웠나요?')
 
-        if answer == 'NO' or answer == 'no':
-            continue
+            if answer == 'stop':
+                print('완료 여부 확인을 중단합니다.')
+                return
 
-        if answer == 'yes' or answer == 'YES':
-            completed_subjects.append(subject)
-            total_completed += 1
+            elif answer == 'NO' or answer == 'no':
+                break
+
+            elif answer == 'yes' or answer == 'YES':
+                completed_subjects.append(subject)
+                total_completed += 1
+                break
+            else:
+                print('잘못된 입력입니다.')
     
     is_calculated = False
     print('공부 완료 확인이 끝났습니다.')
@@ -288,154 +324,210 @@ def count_focus_record(times):
     count = 0
     
     for study_time in times:
-        if study_time >= 4:
+        if study_time >= 4.0:
             count += 1
     
     return count
 
 def do_mission():
-    global hp, focus, stress, exp, gold, level, word_count, typing_score, is_calculated
-    
+    global hp, focus, stress, exp, gold, level, word_count, typing_score, is_calculated    
     if character_name == '':
         print('\n1번 메뉴에서 인적 사항을 모두 입력한 후 다시 실행해주세요!')
         return
     
-    print('\n==== 일일 미션 🎮 ====')
-    print('1. 1시간 휴식')
-    print('2. 식사')
-    print('3. 카페')
-    print('4. 영단어 타자 미니게임')
-    print('0. 미션 나가기')
-
-    mission_choice = input('수행할 미션 번호를 입력하세요: ')
-
-    if mission_choice == '1':
-        hp += 5
-        stress -= 10
-        exp -= 3
-
-        level = exp // 100+1
-        update_latest_record()
-        print('1시간 휴식을 통해 체력을 회복하고 스트레스를 완화시키세요.')
+    while True:
         
-    elif mission_choice == '2':
-        hp += 10
-        update_latest_record()
-        print('식사를 통해 체력을 회복하세요!')
+        print('\n==== 일일 미션 🎮 ====')
+        print('1. 1시간 휴식')
+        print('2. 식사')
+        print('3. 카페')
+        print('4. 영단어 타자 미니게임')
+        print('0. 미션 나가기')
 
-    elif mission_choice == '3':
-        cafe_ticket = ''
-       
-        for item in items:
-            if '카페' in item or '라떼' in item or '음료' in item or '티' in item:
-                cafe_ticket = item
-                break
+        mission_choice = get_int('수행할 미션 번호를 입력하세요: ')
+
+        if mission_choice == 1:
+            hp += 5
+            stress -= 10
+            exp -= 3
+
+            level = exp // 100+1
+            update_latest_record()
+            print('1시간 휴식을 통해 체력을 회복하고 스트레스를 완화시키세요.')
             
-        if cafe_ticket != '':
-            items.remove(cafe_ticket)
-            focus += 8
-            stress -= 8
+        elif mission_choice == 2:
+            hp += 10
+            update_latest_record()
+            print('식사를 통해 체력을 회복하세요!')
+
+        elif mission_choice == 3:
+            cafe_ticket = ''
+        
+            for item in items:
+                if '카페' in item or '라떼' in item or '음료' in item or '티' in item:
+                    cafe_ticket = item
+                    break
+                
+            if cafe_ticket != '':
+                items.remove(cafe_ticket)
+                focus += 8
+                stress -= 8
+
+                update_latest_record() 
+
+                print(f'{cafe_ticket}을(를) 사용했습니다!')
+                print('음료 섭취를 통해 집중력을 증가시키고 스트레스를 감소시키세요!')
+                
+            else:
+                print('사용 가능한 카페 이용권이 존재하지 않습니다...')
+                print('상점을 방문해 카페 관련 보상을 구매해주세요!')    
+
+        elif mission_choice == 4:
+            print('\n==== 영단어 타자 미니게임 ====')
+            print('\n====      도전 단계      ====')
+            print('1. 100타')
+            print('2. 200타')
+            print('3. 400타')
+            print('4. 600타')
+            challenge_choice = get_int('입력: ')
+            print('도전을 성공하면 추가 경험치와 골드를 얻을 수 있습니다!')
+
+            if challenge_choice == 1:
+                challenge_speed = 100
+                bonus_exp = 1
+                bonus_gold = 2            
+            elif challenge_choice == 2:
+                challenge_speed = 200
+                bonus_exp = 3
+                bonus_gold = 10
+            elif challenge_choice == 3:
+                challenge_speed = 400
+                bonus_exp = 5
+                bonus_gold = 20
+            elif challenge_choice == 4:
+                challenge_speed = 600
+                bonus_exp = 8
+                bonus_gold = 30
+            else :
+                challenge_speed = 200
+                print('잘못 입력되었습니다. 기본 설정인 200타로 진행됩니다.')
+                bonus_exp = 3
+                bonus_gold = 10
+
+            print('총 50개의 파이썬 관련 영단어가 출제됩니다.')
+            print('제시된 단어를 최대한 정확히 입력해주세요!')
+            print('start!')
+
+            words = ['while', 'for', 'range', 'start', 'stop', 'step', 'break', 'continue', 'loop',
+                    'condition', 'count', 'print', 'input', 'menu', 'total', 'filter', 'sum', 'indexing',
+                    'slicing', 'string', 'list', 'tuple', 'dictionary', 'set','index',
+                    'append', 'split', 'method', 'database', 'challenge', 'final', 'structure', 'sequence',
+                    'variable', 'integer', 'float', 'boolean', 'function', 'definition', 'call' , 'parameter',
+                    'argument', 'return', 'local', 'global', 'scope', 'keyword', 'default', 'position', 'value',
+                    'header', 'suite', 'execute', 'control', 'repeat', 'object', 'random', 'angle', 'distance', 'forward'
+                    , 'left', 'right', 'turtle', 'graphics', 'library', 'import', 'shape', 'color', 'current',
+                    'position', 'xcor', 'ycor', 'infinite', 'password', 'message', 'area', 'radius', 'calculate', 'processing',
+                    'result', 'output', 'reusable', 'modular', 'flexible', 'indentation',
+                    'syntax', 'range', 'step', 'start', 'stop', 'string', 'indexing', 'slicing',
+                    'negative', 'positive', 'sequence', 'data', 'object', 'condition', 'True', 'False', 'elif',
+                    'else', 'nested', 'challenge', 'mission', 'average', 'score', 'pass', 'fail', 'order',
+                    'payment', 'discount', 'system', 'kiosk', 'smart', 'movie', 'cafe', 'POS', 'sales',
+                    'review', 'repeat', 'iteration', 'execute', 'command', 'program', 'design', 'logic','module',
+                    'interactive', 'visual', 'graphics', 'coordinate', 'movement', 'rotation', 'generate', 'randomize', 'accumulate',
+                    'initialize', 'increment', 'decrement', 'validation', 'exception', 'process', 'operation', 'format',
+                    'formatting', 'concatenate', 'multiply', 'divide', 'compare', 'retrieve', 'access', 'update', 'variable','definition',
+                    'execution', 'declaration', 'reusable', 'maintainable'] 
+            
+
+
+            correct_count = 0
+            total_mistake = 0
+            total_length = 0
+            typewriting = 0
+            e_exp = 0
+            e_gold = 0
+
+            # 영타 게임 변수
+            start_time = time.time()
+            
+            for i in range(50):
+                quiz_word = random.choice(words)
+
+                print(f'\n{i+1}번 단어: {quiz_word}')
+                answer = input('입력: ')
+
+                mistake = 0
+                short_length = min(len(quiz_word), len(answer))
+
+                for j in range(short_length):
+                    if quiz_word[j] != answer[j]:
+                        mistake += 1
+
+                mistake += abs(len(quiz_word) - len(answer))
+
+                total_mistake += mistake
+                total_length += len(quiz_word)
+
+                if answer == quiz_word:
+                    correct_count += 1    
+                    typewriting += len(answer) 
+                else:
+                    print(f'오답! 오타 개수: {mistake}개')
+
+            end_time = time.time()
+            play_time = end_time - start_time
+
+            if total_length > 0:
+                accuracy = (total_length - total_mistake) / total_length * 100
+            else:
+                accuracy = 0
+
+            if play_time >0:
+                typing_speed = typewriting / play_time * 60
+            else:
+                typing_speed = 0
+
+            typing_score += int(accuracy)
+            word_count += correct_count  
+
+
+            stress += total_mistake
+
+            hours = int(play_time // 3600)
+            minutes = int ((play_time % 3600) // 60)
+            seconds = int(play_time % 60)
+
+            print('\n==== 영단어 타자 미니게임 결과 ====')
+            if typing_speed >= challenge_speed:
+                print(f'{challenge_speed}타 성공!')
+                e_exp = (correct_count + bonus_exp) * 20
+                e_gold = (correct_count + bonus_gold) * 50
+
+
+            else:
+                print(f'{challenge_speed}타 미달성')
+                e_exp = correct_count * 20
+                e_gold = correct_count * 50
+
+            print(f'소요 시간: {hours:02d}:{minutes:02d}:{seconds:02d}')
+            print(f'{typing_speed:.1f}타')
+            print(f'오타 수 : {total_mistake}개')
+            print(f'정확도 : {accuracy:.1f}%')
+            print(f'\n획득 영타 점수 : {int(accuracy)}점')
+            print(f'획득 경험치: {e_exp}EX')
+            print(f'획득 골드 : {e_gold}골드')
+
+            exp += e_exp
+            gold += e_gold  
 
             update_latest_record() 
 
-            print(f'{cafe_ticket}을(를) 사용했습니다!')
-            print('음료 섭취를 통해 집중력을 증가시키고 스트레스를 감소시키세요!')
-            
+        elif mission_choice == 0:
+            print('일일미션 수행을 종료합니다')
+            break
+
         else:
-            print('사용 가능한 카페 이용권이 존재하지 않습니다...')
-            print('상점을 방문해 카페 관련 보상을 구매해주세요!')    
-
-    elif mission_choice == '4':
-        print('\n==== 영단어 타자 미니게임 ====')
-        print('총 30개의 파이썬 관련 영단어가 출제됩니다.')
-        print('제시된 단어를 최대한 정확히 입력해주세요!')
-        print('start!')
-
-        words = ['while', 'for', 'range', 'start', 'stop', 'step', 'break', 'continue', 'loop',
-                 'condition', 'count', 'print', 'input', 'menu', 'total', 'filter', 'sum', 'indexing',
-                 'slicing', 'string', 'list', 'tuple', 'dictionary', 'set','index',
-                 'append', 'split', 'method', 'database', 'challenge', 'final', 'structure', 'sequence',
-                 'variable', 'integer', 'float', 'boolean', 'function', 'definition', 'call' , 'parameter',
-                 'argument', 'return', 'local', 'global', 'scope', 'keyword', 'default', 'position', 'value',
-                 'header', 'suite', 'execute', 'control', 'repeat', 'object', 'random', 'angle', 'distance', 'forward'
-                 , 'left', 'right', 'turtle', 'graphics', 'library', 'import', 'shape', 'color', 'current',
-                 'position', 'xcor', 'ycor', 'infinite', 'password', 'message', 'area', 'radius', 'calculate', 'processing',
-                 'result', 'output', 'reusable', 'modular', 'flexible', 'indentation',
-                 'syntax', 'range', 'step', 'start', 'stop', 'string', 'indexing', 'slicing',
-                 'negative', 'positive', 'sequence', 'data', 'object', 'condition', 'True', 'False', 'elif',
-                 'else', 'nested', 'challenge', 'mission', 'average', 'score', 'pass', 'fail', 'order',
-                 'payment', 'discount', 'system', 'kiosk', 'smart', 'movie', 'cafe', 'POS', 'sales',
-                 'review', 'repeat', 'iteration', 'execute', 'command', 'program', 'design', 'logic','module',
-                 'interactive', 'visual', 'graphics', 'coordinate', 'movement', 'rotation', 'generate', 'randomize', 'accumulate',
-                 'initialize', 'increment', 'decrement', 'validation', 'exception', 'process', 'operation', 'format',
-                 'formatting', 'concatenate', 'multiply', 'divide', 'compare', 'retrieve', 'access', 'update', 'variable','definition',
-                 'execution', 'declaration', 'reusable', 'maintainable'] 
-        
-        correct_count = 0
-        total_mistake = 0
-        total_length = 0
-
-        for i in range(30):
-            quiz_word = random.choice(words)
-
-            print(f'\n{i+1}번째 단어: {quiz_word}')
-            answer = input('입력: ')
-
-            mistake = 0
-
-            if len(quiz_word) < len(answer):
-                short_length = len(quiz_word)
-            else:
-                short_length = len(answer)
-
-            for j in range(short_length):
-                if quiz_word[j] != answer[j]:
-                    mistake += 1
-
-            if len(quiz_word) > len(answer):
-                mistake += len(quiz_word) - len(answer)
-            elif len(quiz_word) < len(answer):
-                mistake += len(answer) - len(quiz_word)
-
-            total_mistake += mistake
-            total_length += len(quiz_word)
-
-            if answer == quiz_word:
-                correct_count += 1     
-            else:
-                print(f'오답! 오타 개수: {mistake}개')
-
-        if total_length > 0:
-            accuracy = (total_length - total_mistake) / total_length * 100
-        else:
-            accuracy = 0
-            print('잠이 부족하신가요? 숙면 후 타자 연습의 재진행을 권합니다.')
-
-        if accuracy < 0:
-           accuracy = 0
-
-        word_count += correct_count
-        typing_score += int(accuracy)
-
-        exp += correct_count * 20
-        gold += correct_count * 50
-        stress += total_mistake
-
-        print('\n==== 영단어 타자 미니게임 결과 ====')
-        print(f'정답 개수 : 30개 중 {correct_count}개')
-        print(f'총 오타 수 : 30 단어 작성 중 {total_mistake}개')
-        print(f'정확도 : {accuracy:.1f}%')
-        print(f'획득 영타 점수 : {int(accuracy)}점')
-        print(f'획득 경험치 : {correct_count * 20}')
-        print(f'획득 골드 : {correct_count * 50}골드')
-
-        update_latest_record() 
-
-    elif mission_choice == '0':
-        print('일일미션 수행을 종료합니다')
-
-    else:
-        print('잘못된 메뉴 선택입니다!')
+            print('잘못된 메뉴 선택입니다!')
 
 
 # 사용자 별 하루 생존 결과 저장 시스템
@@ -469,7 +561,6 @@ def update_latest_record():
 def calculate_status():
     global hp, focus, stress, exp, gold, level
     global condition, message, warning, bonus_message, focus_Record, is_calculated
-
     if character_name == '':
         print('\n1번 메뉴에서 인적 사항을 모두 입력한 후 다시 실행해주세요!')
         return
@@ -568,18 +659,18 @@ def print_result():
             time = study_times[i]
 
             ratio = time / study_hours * 100
-            print(f'{subject}: {time}hour ({ratio:.1f}%)')
+            print(f'{subject}: {format_time(time)} ({ratio:.1f}%)')
 
     else:
         print('아직 입력된 공부 기록이 없습니다!')
         print('입력 후 다시 시도해주세요.')
 
-    print(f'\n총 공부 시간: {study_hours}hour')
+    print(f'\n총 공부 시간: {format_time(study_hours)}')
     print(f'공부 과목 수: {len(study_subjects)}개')
     print(f'집중 공부 과목 수: {focus_Record}개')
 
     if len(study_times) >0:
-        print(f'가장 오래 공부한 시간: {max(study_times)}hour')
+        print(f'가장 오래 공부한 시간: {format_time(max(study_times))}')
         
     print(f'\n 오늘 암기한 영어 단어 수: {word_count}개')
     print(f'오늘의 영타 점수: {typing_score}점')
@@ -621,91 +712,91 @@ def use_shop():
         print('\n오늘의 정산이 아직 완료되지 않았습니다!')
         print('5번 메뉴에서 오늘의 생존 결과를 먼저 조회한 후 상점을 이용해주세요.')
         return
+    while True:
+        print('\n==== 현실 보상 상점 🛒 ====')  
+        print(f'현재 보유 골드: {gold}')
+        print('1. 카페 그라지에 아이스티 구매권: 2,500골드')
+        print('2. 편의점 초콜릿 구매권: 2,000골드')
+        print('3. 일일 자유시간권: 50,000골드')
+        print('4. 랜덤 보상 룰렛 🎰 ')
+        print('0. 상점 나가기')
 
-    print('\n==== 현실 보상 상점 🛒 ====')  
-    print(f'현재 보유 골드: {gold}')
-    print('1. 카페 그라지에 아이스티 구매권: 2,500골드')
-    print('2. 편의점 초콜릿 구매권: 2,000골드')
-    print('3. 일일 자유시간권: 50,000골드')
-    print('4. 랜덤 보상 룰렛 🎰 ')
-    print('0. 상점 나가기')
+        shop_choice = get_int('구매할 메뉴 번호를 입력하세요!')
 
-    shop_choice = input('구매할 메뉴 번호를 입력하세요!')
-
-    if shop_choice == '1':
-        if gold >= 2500:
-            gold -= 2500
-            items.append('카페 그라지에 아이스티 구매권')
-            update_latest_record()
-            print('카페 그라지에 아이스티 구매권을 획득했습니다.')
-
-        else:
-            print('골드가 부족합니다.')
-
-    elif shop_choice == '2':
-        if gold >= 2000:
-            gold -= 2000
-            items.append('편의점 초콜릿 구매권')
-            update_latest_record()
-            print('편의점 초콜릿 구매권을 획득했습니다.')
-
-        else:
-            print('골드가 부족합니다.')  
-
-    elif shop_choice == '3':
-        if gold >= 50000:
-            gold -= 50000
-            items.append('일일 자유시간권')
-            update_latest_record()
-            print('일일 자유시간권을 획득했습니다.')
-
-        else:
-            print('골드가 부족합니다.') 
-
-    elif shop_choice == '4':
-        print('==== 랜덤 보상 룰렛 🎰 ====')
-        random_item = input('구매하고 싶은 품목 입력(Ex. 카페 1회 이용권, 배민 이용권, 1시간 여가시간 이용권 ):')
-
-        if '밥' in random_item or '파스타' in random_item or '쿠팡' in random_item or '배민' in random_item or '치킨' in random_item or '떡볶이' in random_item :
-            min_price = 8000
-            max_price = 30000
-
-        elif '영화' in random_item or '노래방' in random_item or '게임' in random_item or '자유' in random_item or '여가' in random_item or '만화카페' in random_item :
-            min_price = 5000
-            max_price = 50000  
-
-        elif '티' in random_item or '라떼' in random_item or '스무디' in random_item or '쉐이크' in random_item or '과자' in random_item or '초코' in random_item or '초콜릿' in random_item or '음료' in random_item or '카페' in random_item or '편의점' in random_item:  
-            min_price = 500
-            max_price = 7000              
-            
-        else:
-            min_price = 500
-            max_price = 100000                            
-
-        random_price = random.randint(min_price, max_price)
-
-        print(f'{random_item}을(를) {random_price}골드로 구매하실 수 있습니다!')
-        buy_choice = input('구매하시겠습니까? yes/no: ')
-
-        if buy_choice == 'yes' or buy_choice == 'YES':
-            if gold >= random_price:
-                gold -= random_price
-                items.append(random_item)
+        if shop_choice == 1:
+            if gold >= 2500:
+                gold -= 2500
+                items.append('카페 그라지에 아이스티 구매권')
                 update_latest_record()
-                print(f'{random_item} 구매권을 획득했습니다.')
+                print('카페 그라지에 아이스티 구매권을 획득했습니다.')
+
             else:
-                print('골드가 부족하여 구매에 실패하였습니다! 다음 기회에..')
+                print('골드가 부족합니다.')
+
+        elif shop_choice == 2:
+            if gold >= 2000:
+                gold -= 2000
+                items.append('편의점 초콜릿 구매권')
+                update_latest_record()
+                print('편의점 초콜릿 구매권을 획득했습니다.')
+
+            else:
+                print('골드가 부족합니다.')  
+
+        elif shop_choice == 3:
+            if gold >= 50000:
+                gold -= 50000
+                items.append('일일 자유시간권')
+                update_latest_record()
+                print('일일 자유시간권을 획득했습니다.')
+
+            else:
+                print('골드가 부족합니다.') 
+
+        elif shop_choice == 4:
+            print('==== 랜덤 보상 룰렛 🎰 ====')
+            random_item = input('구매하고 싶은 품목 입력(Ex. 카페 1회 이용권, 배민 이용권, 1시간 여가시간 이용권 ):')
+
+            if '밥' in random_item or '파스타' in random_item or '쿠팡' in random_item or '배민' in random_item or '치킨' in random_item or '떡볶이' in random_item :
+                min_price = 8000
+                max_price = 30000
+
+            elif '영화' in random_item or '노래방' in random_item or '게임' in random_item or '자유' in random_item or '여가' in random_item or '만화카페' in random_item :
+                min_price = 5000
+                max_price = 50000  
+
+            elif '티' in random_item or '라떼' in random_item or '스무디' in random_item or '쉐이크' in random_item or '과자' in random_item or '초코' in random_item or '초콜릿' in random_item or '음료' in random_item or '카페' in random_item or '편의점' in random_item:  
+                min_price = 500
+                max_price = 7000              
+                
+            else:
+                min_price = 500
+                max_price = 100000                            
+
+            random_price = random.randint(min_price, max_price)
+
+            print(f'{random_item}을(를) {random_price}골드로 구매하실 수 있습니다!')
+            buy_choice = input('구매하시겠습니까? yes/no: ')
+
+            if buy_choice == 'yes' or buy_choice == 'YES':
+                if gold >= random_price:
+                    gold -= random_price
+                    items.append(random_item)
+                    update_latest_record()
+                    print(f'{random_item} 구매권을 획득했습니다.')
+                else:
+                    print('골드가 부족하여 구매에 실패하였습니다! 다음 기회에..')
+            else:
+                print('구매를 선택하지 않으셨습니다!')
+                print(f'{random_item} 구매권이 사라집니다.')
+                print('다음 기회에..')                       
+
+        elif shop_choice == 0:
+            print('상점을 나갑니다. 다음 방문을 기다리겠습니다!')
+            break
         else:
-            print('구매를 선택하지 않으셨습니다!')
-            print(f'{random_item} 구매권이 사라집니다.')
-            print('다음 기회에..')                       
-
-    elif shop_choice == '0':
-        print('상점을 나갑니다. 다음 방문을 기다리겠습니다!')
-
-    else:
-        print('잘못된 메뉴 선택입니다. 없는 메뉴일 경우엔 4번 랜덤 선택을,')
-        print('상점을 나가시고 싶을 경우엔 0번을 눌러주세요.')    
+            print('잘못된 메뉴 선택입니다. 없는 메뉴일 경우엔 4번 랜덤 선택을,')
+            print('상점을 나가시고 싶을 경우엔 0번을 눌러주세요.')    
 
 # ===========================================
 # 3차 추가
@@ -721,27 +812,38 @@ def use_reward():
         print('\n아직 사용할 수 있는 보상이 없습니다.')
         print('상점 방문 후 다시 이용해주세요.')
         return
-    
-    print('\n ==== 보유 보상 목록 🎁 ====')
-    
-    for item in items:
-        print(f'- {item}')
+    while True:
+        print('\n ==== 보유 보상 목록 🎁 ====')
+        
+        for item in items:
+            print(f'- {item}')
 
-    reward = input('사용할 보상 이름을 입력해주세요!')
+        reward = input('사용할 보상 이름을 입력해주세요!')
 
-    if reward in items:
-        if '티' in reward or '라떼' in reward or '스무디' in reward or '쉐이크' in reward or '음료' in reward or '카페' in reward :
-            print('카페 관련 보상은 8번 일일 미션 수행의 카페 이용에서만 사용 가능합니다!')
-            print('메인 메뉴에서 일일미션을 선택해주세요!')
+        if reward in items:
+            if '티' in reward or '라떼' in reward or '스무디' in reward or '쉐이크' in reward or '음료' in reward or '카페' in reward :
+                print('카페 관련 보상은 8번 일일 미션 수행의 카페 이용에서만 사용 가능합니다!')
+                print('메인 메뉴에서 일일미션을 선택해주세요!')
 
-        else:    
-            items.remove(reward)
-            update_latest_record()
-            print(f'{reward}을(를) 사용하셨습니다!')
-            print('즐거운 시간 되시길 바랍니다.')
-    else:
-        print('해당 보상을 보유하고 있지 않습니다.')
-        print('상점 방문을 추천드립니다.')
+            else:    
+                items.remove(reward)
+                update_latest_record()
+                print(f'{reward}을(를) 사용하셨습니다!')
+                print('즐거운 시간 되시길 바랍니다.')
+        else:
+            print('해당 보상을 보유하고 있지 않습니다.')
+            print('상점 방문을 추천드립니다.')
+            
+        again = input('\n다른 보상을 사용하시겠습니까? (yes/no): ')
+
+        if again.lower() == 'yes':
+            continue
+        elif again.lower() == 'no':
+            print('메인 메뉴로 돌아갑니다!')
+            break
+        else:
+            print('yes 또는 no만 입력해주세요.')
+        continue    
 
 # ===========================================
 # 4차 추가 이중리스트 출력
@@ -867,43 +969,43 @@ def read_saved_file():
 while True:
 
     show_menu()
-    choice = input('메뉴를 선택하세요: ')
+    choice = get_int('메뉴를 선택하세요: ')
 
-    if choice == '1':
+    if choice == 1:
         input_personal_info()
 
-    elif choice == '2':
+    elif choice == 2:
         input_study_record()
 
-    elif choice == '3':
+    elif choice == 3:
         organize_study_list()
 
-    elif choice == '4':
+    elif choice == 4:
         check_completed_subjects()        
 
-    elif choice == '5':
+    elif choice == 5:
         print_result()
 
-    elif choice == '6':
+    elif choice == 6:
         use_shop()
 
-    elif choice == '7':
+    elif choice == 7:
         use_reward()
 
-    elif choice == '8':
+    elif choice == 8:
         do_mission()
 
-    elif choice == '9':
+    elif choice == 9:
         print_survival_records()
 
-    elif choice == '10':
+    elif choice == 10:
         save_records_to_file()
 
-    elif choice == '11':
+    elif choice == 11:
         read_saved_file()
 
 
-    elif choice == '0':
+    elif choice == 0:
         print('\n프로그램 종료!')
         break
     
